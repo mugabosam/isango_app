@@ -1,0 +1,117 @@
+name: Validate Issue Template
+
+on:
+  issues:
+    types:
+      - opened
+      - edited
+      - reopened
+
+permissions:
+  issues: write
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate issue body
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const issue = context.payload.issue;
+            const body = issue.body || "";
+            const requiredSections = [
+              "### Screen",
+              "### Route",
+              "### Target File",
+              "### Stitch Screen URL",
+              "### Screenshot or Export Evidence",
+              "### User Story",
+              "### Required UI Sections",
+              "### Validation and Error States",
+              "### Navigation Behavior",
+              "### Reusable Widgets and Theme Tokens",
+              "### Tests",
+              "### Acceptance Criteria",
+              "### Out of Scope",
+            ];
+
+            const missingSections = requiredSections.filter((section) => !body.includes(section));
+            const requiredValues = [
+              "### Route",
+              "### Target File",
+              "### Stitch Screen URL",
+              "### Screenshot or Export Evidence",
+              "### Acceptance Criteria",
+            ];
+            const emptySections = requiredValues.filter((section) => {
+              const pattern = new RegExp(`${section}\\s*\\n\\s*_No response_`, "i");
+              return pattern.test(body);
+            });
+
+            const hasProjectLink = body.includes("stitch.withgoogle.com/projects/7143695298358793658");
+            const isValid = missingSections.length === 0 && emptySections.length === 0 && hasProjectLink;
+            const needsTemplateLabel = "needs-template";
+
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const issue_number = issue.number;
+
+            if (!isValid) {
+              const pieces = [];
+              if (missingSections.length > 0) {
+                pieces.push(`Missing sections: ${missingSections.join(", ")}`);
+              }
+              if (emptySections.length > 0) {
+                pieces.push(`Incomplete required answers: ${emptySections.join(", ")}`);
+              }
+              if (!hasProjectLink) {
+                pieces.push("The body must include the Isango Stitch project link for project `7143695298358793658`.");
+              }
+
+              const message = [
+                "This issue does not match the required auth-screen template and was closed automatically.",
+                "",
+                ...pieces.map((piece) => `- ${piece}`),
+                "",
+                "Please reopen it using the `Auth screen` issue form and include the exact Stitch screen link plus screenshot/export evidence.",
+              ].join("\n");
+
+              await github.rest.issues.createComment({
+                owner,
+                repo,
+                issue_number,
+                body: message,
+              });
+
+              const existingLabels = issue.labels.map((label) => typeof label === "string" ? label : label.name);
+              if (!existingLabels.includes(needsTemplateLabel)) {
+                await github.rest.issues.addLabels({
+                  owner,
+                  repo,
+                  issue_number,
+                  labels: [needsTemplateLabel],
+                });
+              }
+
+              if (issue.state === "open") {
+                await github.rest.issues.update({
+                  owner,
+                  repo,
+                  issue_number,
+                  state: "closed",
+                });
+              }
+
+              return;
+            }
+
+            const existingLabels = issue.labels.map((label) => typeof label === "string" ? label : label.name);
+            if (existingLabels.includes(needsTemplateLabel)) {
+              await github.rest.issues.removeLabel({
+                owner,
+                repo,
+                issue_number,
+                name: needsTemplateLabel,
+              }).catch(() => {});
+            }

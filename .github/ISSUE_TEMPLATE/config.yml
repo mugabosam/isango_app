@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Isango Stitch Project
+    url: https://stitch.withgoogle.com/projects/7143695298358793658
+    about: Use the Stitch project as the source of truth for auth-screen layout decisions.
+  - name: Isango Repository
+    url: https://github.com/iPelino/isango_app
+    about: Review the live repository before opening UI work.

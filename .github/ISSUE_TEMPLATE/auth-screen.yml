@@ -1,0 +1,149 @@
+name: Auth screen
+description: Create or refine a login, signup, or verify-email screen using the Isango Stitch design.
+title: "[Auth]: "
+labels:
+  - auth
+  - ui
+  - week-11
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this form for auth UI work only.
+
+        Required before assignment:
+        - include the exact Stitch screen URL from project `7143695298358793658`
+        - attach screenshot/export evidence
+        - keep Firebase calls, session restore, and role enforcement in follow-up issues unless explicitly in scope
+  - type: dropdown
+    id: screen
+    attributes:
+      label: Screen
+      description: Select the auth screen this issue covers.
+      options:
+        - Sign In
+        - Sign Up
+        - Verify Email
+    validations:
+      required: true
+  - type: input
+    id: route
+    attributes:
+      label: Route
+      description: Enter the named route constant this issue targets.
+      placeholder: /login
+    validations:
+      required: true
+  - type: input
+    id: target-file
+    attributes:
+      label: Target File
+      description: Enter the expected implementation file path.
+      placeholder: lib/screens/auth/sign_in_screen.dart
+    validations:
+      required: true
+  - type: input
+    id: stitch-url
+    attributes:
+      label: Stitch Screen URL
+      description: Paste the exact Stitch screen link from the Isango project.
+      placeholder: https://stitch.withgoogle.com/projects/7143695298358793658
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Screenshot or Export Evidence
+      description: Add screenshot filenames, export paths, or pasted links that prove which Stitch screen this work follows.
+      placeholder: |
+        - Screenshot: auth/sign-in-v2.png
+        - Export: stitch-exports/sign-in/index.html
+    validations:
+      required: true
+  - type: textarea
+    id: user-story
+    attributes:
+      label: User Story
+      description: Describe the learner or end-user outcome.
+      placeholder: As a student, I want to sign in quickly so I can access the campus events feed.
+    validations:
+      required: true
+  - type: textarea
+    id: ui-sections
+    attributes:
+      label: Required UI Sections
+      description: List the exact UI sections that must be present.
+      placeholder: |
+        - wordmark/header
+        - intro copy
+        - email and password fields
+        - sign-in CTA
+        - sign-up and password reset links
+    validations:
+      required: true
+  - type: textarea
+    id: validation-states
+    attributes:
+      label: Validation and Error States
+      description: Describe inline validation, loading, and submission error behavior.
+      placeholder: |
+        - show inline email format error
+        - disable CTA while submitting
+        - show submission banner on auth failure
+    validations:
+      required: true
+  - type: textarea
+    id: navigation
+    attributes:
+      label: Navigation Behavior
+      description: Explain where primary and secondary actions should navigate.
+      placeholder: |
+        - sign-in success hook returns control to future auth provider
+        - secondary link opens /signup
+        - password reset opens a placeholder flow
+    validations:
+      required: true
+  - type: textarea
+    id: reusable-ui
+    attributes:
+      label: Reusable Widgets and Theme Tokens
+      description: Call out shared components, colors, spacing, or typography to reuse.
+      placeholder: |
+        - reuse AppTheme input decoration
+        - use logisticsNavy, commandBlue, mistBackground, safetyOrange
+        - no bottom navigation on auth screens
+    validations:
+      required: true
+  - type: textarea
+    id: tests
+    attributes:
+      label: Tests
+      description: Define the widget or navigation tests that must be added.
+      placeholder: |
+        - widget test for inline validation
+        - widget test for route navigation
+        - widget test for loading state
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance Criteria
+      description: Write the concrete success criteria.
+      placeholder: |
+        - matches Stitch layout and copy hierarchy
+        - uses Isango theme tokens
+        - exposes clean future auth hooks without real Firebase integration
+    validations:
+      required: true
+  - type: textarea
+    id: out-of-scope
+    attributes:
+      label: Out of Scope
+      description: Clarify what this issue must not implement.
+      placeholder: |
+        - no real Firebase calls
+        - no session persistence
+        - no role-based publishing permissions
+    validations:
+      required: true
