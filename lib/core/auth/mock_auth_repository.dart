@@ -7,8 +7,25 @@ import 'auth_exception.dart';
 import 'auth_user.dart';
 
 class MockAuthRepository {
-  MockAuthRepository._();
+  MockAuthRepository._() {
+    _seedDemoUser();
+  }
   static final MockAuthRepository instance = MockAuthRepository._();
+
+  static const demoEmail = 'demo@ur.ac.rw';
+  static const demoPassword = 'Demo123!';
+  static const demoFullName = 'Demo Student';
+
+  void _seedDemoUser() {
+    final salt = _newSalt();
+    _users[demoEmail] = _StoredUser(
+      id: 'demo-user',
+      fullName: demoFullName,
+      email: demoEmail,
+      salt: salt,
+      passwordHash: _hash(demoPassword, salt),
+    );
+  }
 
   static const int _maxFailedAttempts = 5;
   static const Duration _lockoutWindow = Duration(seconds: 30);

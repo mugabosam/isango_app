@@ -9,8 +9,24 @@ import 'package:isango_app/widgets/auth/form_banner.dart';
 import 'package:isango_app/widgets/auth/password_rules_view.dart';
 import 'package:isango_app/widgets/auth/primary_button.dart';
 
+typedef SignUpHandler = Future<void> Function({
+  required String fullName,
+  required String email,
+  required String password,
+});
+
 class SignUpScreen extends StatefulWidget {
-  const SignUpScreen({super.key});
+  const SignUpScreen({super.key, this.onSignUp});
+
+  final SignUpHandler? onSignUp;
+
+  static const fullNameFieldKey = Key('signup-full-name-field');
+  static const emailFieldKey = Key('signup-email-field');
+  static const passwordFieldKey = Key('signup-password-field');
+  static const confirmFieldKey = Key('signup-confirm-field');
+  static const submitButtonKey = Key('signup-submit');
+  static const loginLinkKey = Key('signup-login-link');
+  static const backButtonKey = Key('signup-back');
 
   @override
   State<SignUpScreen> createState() => _SignUpScreenState();
@@ -22,7 +38,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmController = TextEditingController();
-  final _auth = MockAuthRepository.instance;
 
   bool _obscurePassword = true;
   bool _obscureConfirm = true;
@@ -65,6 +80,18 @@ class _SignUpScreenState extends State<SignUpScreen> {
     return null;
   }
 
+  Future<void> _defaultSignUp({
+    required String fullName,
+    required String email,
+    required String password,
+  }) async {
+    await MockAuthRepository.instance.signUp(
+      fullName: fullName,
+      email: email,
+      password: password,
+    );
+  }
+
   Future<void> _onSubmit() async {
     final form = _formKey.currentState;
     if (form == null) return;
@@ -79,14 +106,16 @@ class _SignUpScreenState extends State<SignUpScreen> {
       _showSignInHint = false;
     });
 
+    final handler = widget.onSignUp ?? _defaultSignUp;
+
     try {
-      await _auth.signUp(
+      await handler(
         fullName: _nameController.text,
         email: _emailController.text,
         password: _passwordController.text,
       );
       if (!mounted) return;
-      Navigator.of(context).pushReplacementNamed(AppRoutes.home);
+      Navigator.of(context).pushReplacementNamed(AppRoutes.verifyEmail);
     } on EmailAlreadyInUseException catch (e) {
       if (!mounted) return;
       setState(() {
@@ -101,11 +130,25 @@ class _SignUpScreenState extends State<SignUpScreen> {
     }
   }
 
+  void _goToLogin() {
+    Navigator.of(context).pushReplacementNamed(AppRoutes.login);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
       resizeToAvoidBottomInset: false,
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        elevation: 0,
+        leading: IconButton(
+          key: SignUpScreen.backButtonKey,
+          icon: const Icon(Icons.arrow_back, color: AppColors.nearBlackInk),
+          tooltip: 'Back',
+          onPressed: _submitting ? null : _goToLogin,
+        ),
+      ),
       body: SafeArea(
         child: Center(
           child: ConstrainedBox(
@@ -121,14 +164,25 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       const _UniversityLogo(),
-                      const SizedBox(height: 28),
+                      const SizedBox(height: 24),
                       const Text(
-                        'Sign up to discover and share campus events.',
+                        'Create your Isango account',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.nearBlackInk,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      const Text(
+                        'Join the campus community to discover and share '
+                        'student events.',
                         textAlign: TextAlign.center,
                         style: TextStyle(
                           fontSize: 13,
-                          fontWeight: FontWeight.w500,
                           color: AppColors.mutedOperationalInk,
+                          height: 1.4,
                         ),
                       ),
                       const SizedBox(height: 22),
@@ -138,19 +192,16 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           action: _showSignInHint
                               ? FormBannerAction(
                                   label: 'Sign In',
-                                  onPressed: _submitting
-                                      ? null
-                                      : () => Navigator.of(context)
-                                          .pushReplacementNamed(
-                                              AppRoutes.login),
+                                  onPressed: _submitting ? null : _goToLogin,
                                 )
                               : null,
                         ),
                         const SizedBox(height: 14),
                       ],
                       _MinimalField(
+                        fieldKey: SignUpScreen.fullNameFieldKey,
                         controller: _nameController,
-                        hint: 'Full name',
+                        hint: 'Display name',
                         keyboardType: TextInputType.name,
                         textInputAction: TextInputAction.next,
                         autofillHints: const [AutofillHints.name],
@@ -163,6 +214,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       ),
                       const SizedBox(height: 10),
                       _MinimalField(
+                        fieldKey: SignUpScreen.emailFieldKey,
                         controller: _emailController,
                         hint: 'University email',
                         keyboardType: TextInputType.emailAddress,
@@ -183,6 +235,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       ),
                       const SizedBox(height: 10),
                       _MinimalField(
+                        fieldKey: SignUpScreen.passwordFieldKey,
                         controller: _passwordController,
                         hint: 'Password',
                         obscureText: _obscurePassword,
@@ -211,6 +264,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       ),
                       const SizedBox(height: 10),
                       _MinimalField(
+                        fieldKey: SignUpScreen.confirmFieldKey,
                         controller: _confirmController,
                         hint: 'Confirm password',
                         obscureText: _obscureConfirm,
@@ -239,11 +293,23 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       ),
                       const SizedBox(height: 14),
                       PasswordStrengthBar(strength: _rules.strength),
-                      const SizedBox(height: 22),
+                      const SizedBox(height: 18),
                       PrimaryButton(
-                        label: 'Sign up',
+                        key: SignUpScreen.submitButtonKey,
+                        label: 'Create Account',
                         loading: _submitting,
                         onPressed: _submitting ? null : _onSubmit,
+                      ),
+                      const SizedBox(height: 12),
+                      const Text(
+                        'We’ll send a verification link to your university '
+                        'email next.',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: AppColors.mutedOperationalInk,
+                          height: 1.4,
+                        ),
                       ),
                     ],
                   ),
@@ -272,10 +338,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   ),
                 ),
                 GestureDetector(
-                  onTap: _submitting
-                      ? null
-                      : () => Navigator.of(context)
-                          .pushReplacementNamed(AppRoutes.login),
+                  key: SignUpScreen.loginLinkKey,
+                  onTap: _submitting ? null : _goToLogin,
                   child: const Text(
                     'Log in',
                     style: TextStyle(
@@ -302,8 +366,8 @@ class _UniversityLogo extends StatelessWidget {
     return Column(
       children: [
         Container(
-          width: 80,
-          height: 80,
+          width: 72,
+          height: 72,
           decoration: const BoxDecoration(
             shape: BoxShape.circle,
             color: AppColors.logisticsNavy,
@@ -311,14 +375,14 @@ class _UniversityLogo extends StatelessWidget {
           child: const Icon(
             Icons.school_rounded,
             color: Colors.white,
-            size: 44,
+            size: 40,
           ),
         ),
-        const SizedBox(height: 14),
+        const SizedBox(height: 12),
         const Text(
           'Isango',
           style: TextStyle(
-            fontSize: 28,
+            fontSize: 24,
             fontWeight: FontWeight.w700,
             letterSpacing: 0.5,
             color: AppColors.logisticsNavy,
@@ -331,6 +395,7 @@ class _UniversityLogo extends StatelessWidget {
 
 class _MinimalField extends StatelessWidget {
   const _MinimalField({
+    this.fieldKey,
     required this.controller,
     required this.hint,
     this.obscureText = false,
@@ -347,6 +412,7 @@ class _MinimalField extends StatelessWidget {
     this.suffix,
   });
 
+  final Key? fieldKey;
   final TextEditingController controller;
   final String hint;
   final bool obscureText;
@@ -365,6 +431,7 @@ class _MinimalField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return TextFormField(
+      key: fieldKey,
       controller: controller,
       obscureText: obscureText,
       keyboardType: keyboardType,
@@ -380,46 +447,7 @@ class _MinimalField extends StatelessWidget {
       style: const TextStyle(fontSize: 14, color: AppColors.nearBlackInk),
       decoration: InputDecoration(
         hintText: hint,
-        hintStyle: const TextStyle(
-          fontSize: 14,
-          color: AppColors.mutedOperationalInk,
-        ),
-        filled: true,
-        fillColor: const Color(0xFFFAFAFA),
         suffixIcon: suffix,
-        isDense: true,
-        contentPadding:
-            const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-          borderSide: const BorderSide(color: AppColors.softBorder),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-          borderSide: const BorderSide(color: AppColors.softBorder),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-          borderSide: const BorderSide(
-            color: AppColors.logisticsNavy,
-            width: 1.4,
-          ),
-        ),
-        errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-          borderSide: const BorderSide(color: AppColors.criticalRed),
-        ),
-        focusedErrorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-          borderSide: const BorderSide(
-            color: AppColors.criticalRed,
-            width: 1.4,
-          ),
-        ),
-        errorStyle: const TextStyle(
-          fontSize: 12,
-          color: AppColors.criticalRed,
-        ),
       ),
     );
   }

@@ -51,14 +51,19 @@ class AppTheme {
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: AppColors.cardWhite,
+        fillColor: const Color(0xFFFAFAFA),
+        isDense: true,
         contentPadding: const EdgeInsets.symmetric(
-            horizontal: 16,
-            vertical: 12
-      ),
+          horizontal: 14,
+          vertical: 14,
+        ),
+        hintStyle: const TextStyle(
+          fontSize: 14,
+          color: AppColors.mutedOperationalInk,
+        ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppRadii.input),
-          borderSide: const BorderSide(color: AppColors.softBorder)
+          borderSide: const BorderSide(color: AppColors.softBorder),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppRadii.input),
@@ -67,16 +72,26 @@ class AppTheme {
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppRadii.input),
           borderSide: const BorderSide(
-              color: AppColors.logisticsNavy,
-              width: 2
+            color: AppColors.logisticsNavy,
+            width: 1.4,
           ),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppRadii.input),
+          borderSide: const BorderSide(color: AppColors.criticalRed),
+        ),
+        focusedErrorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(AppRadii.input),
           borderSide: const BorderSide(
-              color: AppColors.criticalRed
+            color: AppColors.criticalRed,
+            width: 1.4,
           ),
-        ),),
+        ),
+        errorStyle: const TextStyle(
+          fontSize: 12,
+          color: AppColors.criticalRed,
+        ),
+      ),
       textTheme: const TextTheme(
         displayLarge: AppTextStyles.display,
         headlineMedium: AppTextStyles.headline,
