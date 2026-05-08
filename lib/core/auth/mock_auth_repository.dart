@@ -16,6 +16,7 @@ class MockAuthRepository {
 
   final Map<String, _StoredUser> _users = {};
   final Map<String, _AttemptTracker> _attempts = {};
+  final Map<String, String> _resetCodes = {};
   final Random _random = Random.secure();
 
   AuthUser? _currentUser;
@@ -82,9 +83,58 @@ class MockAuthRepository {
     _currentUser = null;
   }
 
-  Future<bool> sendPasswordResetEmail(String email) async {
+  Future<String> sendPasswordResetEmail(String email) async {
     await Future<void>.delayed(_networkLatency);
-    return _users.containsKey(_normalizeEmail(email));
+    final key = _normalizeEmail(email);
+    if (!_users.containsKey(key)) {
+      throw const UserNotFoundException();
+    }
+    final code = (_random.nextInt(900000) + 100000).toString();
+    _resetCodes[key] = code;
+    // ignore: avoid_print
+    print('[Isango demo] Reset code for $key: $code');
+    return code;
+  }
+
+  String? peekResetCodeForDemo(String email) =>
+      _resetCodes[_normalizeEmail(email)];
+
+  Future<void> verifyResetCode({
+    required String email,
+    required String code,
+  }) async {
+    await Future<void>.delayed(_networkLatency);
+    final stored = _resetCodes[_normalizeEmail(email)];
+    if (stored == null || stored != code.trim()) {
+      throw const InvalidResetCodeException();
+    }
+  }
+
+  Future<void> resetPassword({
+    required String email,
+    required String code,
+    required String newPassword,
+  }) async {
+    await Future<void>.delayed(_networkLatency);
+    final key = _normalizeEmail(email);
+    final stored = _resetCodes[key];
+    if (stored == null || stored != code.trim()) {
+      throw const InvalidResetCodeException();
+    }
+    final user = _users[key];
+    if (user == null) {
+      throw const UserNotFoundException();
+    }
+    final salt = _newSalt();
+    _users[key] = _StoredUser(
+      id: user.id,
+      fullName: user.fullName,
+      email: user.email,
+      salt: salt,
+      passwordHash: _hash(newPassword, salt),
+    );
+    _resetCodes.remove(key);
+    _attempts.remove(key);
   }
 
   String _normalizeEmail(String email) => email.trim().toLowerCase();

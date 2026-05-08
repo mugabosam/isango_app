@@ -45,6 +45,73 @@ class PasswordStrengthLabel extends StatelessWidget {
   }
 }
 
+class PasswordStrengthBar extends StatelessWidget {
+  const PasswordStrengthBar({super.key, required this.strength});
+
+  final PasswordStrength strength;
+
+  static const _emptyColor = Color(0xFFE2E8F0);
+
+  @override
+  Widget build(BuildContext context) {
+    if (strength == PasswordStrength.empty) {
+      return const SizedBox.shrink();
+    }
+
+    final (filled, color, label) = switch (strength) {
+      PasswordStrength.weak => (1, AppColors.criticalRed, 'Weak'),
+      PasswordStrength.medium => (2, AppColors.safetyOrange, 'Medium'),
+      PasswordStrength.strong => (3, const Color(0xFF1F8A4C), 'Strong'),
+      PasswordStrength.empty => (0, _emptyColor, ''),
+    };
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Row(
+          children: [
+            for (int i = 0; i < 3; i++) ...[
+              Expanded(child: _Segment(active: i < filled, color: color)),
+              if (i < 2) const SizedBox(width: 6),
+            ],
+          ],
+        ),
+        const SizedBox(height: 6),
+        Align(
+          alignment: Alignment.centerRight,
+          child: Text(
+            label,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: color,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _Segment extends StatelessWidget {
+  const _Segment({required this.active, required this.color});
+
+  final bool active;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 200),
+      height: 6,
+      decoration: BoxDecoration(
+        color: active ? color : PasswordStrengthBar._emptyColor,
+        borderRadius: BorderRadius.circular(3),
+      ),
+    );
+  }
+}
+
 class _Rule extends StatelessWidget {
   const _Rule({required this.label, required this.met});
 

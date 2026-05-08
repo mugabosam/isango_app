@@ -29,3 +29,8 @@ class AccountLockedException extends AuthException {
 
   final int retryInSeconds;
 }
+
+class InvalidResetCodeException extends AuthException {
+  const InvalidResetCodeException()
+      : super('That code is incorrect or has expired.');
+}
